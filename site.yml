@@ -1,0 +1,84 @@
+---
+- name: Install PostgreSQL 14
+  hosts: test-vm
+  tasks:
+    - name: get lsb-release
+      command: "lsb_release -cs"
+      register: release
+
+    - name: print release
+      debug:
+        msg: 'Ubuntu distr is {{ release.stdout }}'
+
+    - name: Add an Apt signing key, uses whichever key is at the URL
+      become: true
+      apt_key:
+        url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+        state: present
+
+    - name: add repository
+      become: true
+      apt_repository:
+        repo: "deb http://apt.postgresql.org/pub/repos/apt {{ release.stdout }}-pgdg main"
+        state: present
+
+    - name: Update the repository cache and install PostgreSQL-14
+      become: true
+      apt:
+        name: postgresql-14
+        state: latest
+        update_cache: yes
+
+    - name: Enable service
+      become: true
+      systemd:
+        name: postgresql
+        enabled: true
+
+    - name: Set free local access to psql
+      become: true
+      command: sed -i s/peer/trust/ /etc/postgresql/14/main/pg_hba.conf
+
+    - name: Start service
+      become: true
+      systemd:
+        name: postgresql
+        state: restarted
+
+- name: Install PGAdmin
+  hosts: test-vm
+  tasks:
+    - name: Add apt-key
+      become: true
+      apt_key:
+        url: https://www.pgadmin.org/static/packages_pgadmin_org.pub
+        state: present
+
+    - name: Add repository
+      become: true
+      apt_repository:
+        repo: "deb https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/{{ release.stdout }} pgadmin4 main"
+        state: present
+
+    - name: Install PGAdmin
+      become: true
+      apt:
+        name: pgadmin4
+        state: latest
+        update_cache: yes
+
+    - name: Set env var 1
+      become: true
+      command: export PGADMIN_SETUP_EMAIL={{ PGADMIN_SETUP_EMAIL }}
+
+    - name: Set env var 2
+      become: true
+      command: export PGADMIN_SETUP_PASSWORD={{ PGADMIN_SETUP_PASSWORD }}
+
+    - name: Setup PGAdmin Web mode
+      become: true
+      shell:
+         cmd: /bin/bash -c '/usr/pgadmin4/bin/setup-web.sh'
+      environment:
+        PGADMIN_SETUP_EMAIL: "{{ PGADMIN_SETUP_EMAIL }}"
+        PGADMIN_SETUP_PASSWORD: "{{ PGADMIN_SETUP_PASSWORD }}"

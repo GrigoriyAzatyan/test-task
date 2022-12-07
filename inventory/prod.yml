@@ -1,0 +1,8 @@
+---
+all:
+  hosts:
+    test-vm:
+      ansible_host: "{{ ip_testvm }}"
+      ansible_connection: ssh
+      ansible_user: user
+

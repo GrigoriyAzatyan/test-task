@@ -1,0 +1,4 @@
+---
+ip_testvm: 46.146.220.219
+PGADMIN_SETUP_EMAIL: mail@domain.com
+PGADMIN_SETUP_PASSWORD: P@$$w0rd
