@@ -1,0 +1,18 @@
+#!/bin/bash
+if [ -f /opt/setup_db.log ]
+then
+   echo "PostgreSQL 14 is configured... OK"
+else
+   psql -U postgres -c "ALTER ROLE postgres with password '{{ PGADMIN_SETUP_PASSWORD }}';"
+   psql -U postgres -c 'CREATE DATABASE test_db OWNER=postgres'
+   psql test_db -U postgres -c 'CREATE TABLE IF NOT EXISTS public.test_table (id serial NOT NULL, name character varying(1000) COLLATE pg_catalog."default", email character varying(100) COLLATE pg_catalog."default") TABLESPACE pg_default;'
+   names=("Eleanor Pearson" "Johnny Sanders" "Joseph Summers" "Ralph Peterson" "John Hall" "Robert Richardson" "Charles Munoz" "Kent Brown" "Christine Jenkins" "Robert Wilson" "Dolores Robertson" "Thomas Barber" "Daniel Hall" "Jonathan Fields" "Kelly Moore" "Geraldine Rice" "Anna Owen" "Edward Brown" "Vanessa Hall" "Doris Lee" "Juanita Fields" "Vanessa Hopkins" "Carol Davis" "Leonard Moore" "James Evans" "Terri Castro" "Brian Harrington" "Kathryn Ortega" "Robert Martin" "Roberta Thomas" "Sherry Hill" "Lauren Howard" "Mary Hammond" "Andy Miles" "Katherine Walters" "Bertha Hernandez" "Kenneth Benson" "Pamela Gonzalez" "Kathy Anderson" "Paul Powell" "Grace Stanley" "Carla Day" "Kathryn Washington" "Marie Tyler" "Mike Morgan" "Susan Johnson" "Nicole Lopez" "Thomas Daniels" "Ronald Jordan" "Martin Keller" "Penny Hall" "Lawrence Carlson" "Julia Roy" "Michael Scott" "Marie Garcia" "Anthony Morton" "Jill Fisher" "Franklin Howard" "Nancy Holloway" "Lawrence Osborne" "James Bates" "Charles Williams" "Edward Bennett" "David Greer" "Ray Hanson" "Nancy Wilkins" "Julia Gibbs" "Suzanne Frazier" "Ernest Simmons" "Mario Warren" "Jon Carpenter" "Michael Henry" "Kenneth Young" "Maria Moore" "Ricky Smith" "Jorge Alexander" "Ruth Martinez" "Vanessa Abbott" "James Davis" "Herbert Bailey" "Mary Williams" "Jesus Francis" "Judy Olson" "Rose Fisher" "David Miller" "Linda Flores" "Katherine Robinson" "Anna Cross" "Michael Roberts" "Jon Henderson" "Terri Smith" "Charlotte Henry" "Jose Long" "Jonathan Day" "Benjamin Wade" "Christopher Rice" "Virginia Lambert" "Dorothy Young" "Leroy Romero" "Henry Brown")
+   for ((i=0; i < 100; i++))
+   do
+      name=${names[${i}]}
+      email=${names[${i}],,}; email=${email/ /_}; email=${email}@company.com
+      psql test_db -U postgres -c "INSERT INTO public.test_table (name,email) VALUES ('${name}','${email}')"
+   done
+ fi
+ mkdir /backup
+ echo Done > /opt/setup_db.log

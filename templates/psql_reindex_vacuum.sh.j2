@@ -1,0 +1,4 @@
+#!/bin/bash
+
+psql -U postgres -d test_db -c "reindex DATABASE test_db;"
+psql -U postgres -d test_db -c "vacuum full analyze;"

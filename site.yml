@@ -67,18 +67,64 @@
         state: latest
         update_cache: yes
 
-    - name: Set env var 1
+    - name: Copy pgadmin_setup.sh
       become: true
-      command: export PGADMIN_SETUP_EMAIL={{ PGADMIN_SETUP_EMAIL }}
-
-    - name: Set env var 2
-      become: true
-      command: export PGADMIN_SETUP_PASSWORD={{ PGADMIN_SETUP_PASSWORD }}
+      template:
+        src: pgadmin_setup.sh.j2
+        mode: 0755
+        dest: /opt/pgadmin_setup.sh
 
     - name: Setup PGAdmin Web mode
       become: true
-      shell:
-         cmd: /bin/bash -c '/usr/pgadmin4/bin/setup-web.sh'
-      environment:
-        PGADMIN_SETUP_EMAIL: "{{ PGADMIN_SETUP_EMAIL }}"
-        PGADMIN_SETUP_PASSWORD: "{{ PGADMIN_SETUP_PASSWORD }}"
+      command: /opt/pgadmin_setup.sh
+
+
+- name: Create Database and filling data
+  hosts: test-vm
+  tasks:
+    - name: Copy script
+      become: true
+      template:
+        src: create_base.sh.j2
+        mode: 0755
+        dest: /opt/create_base.sh
+
+    - name: Start script
+      become: true
+      command: /opt/create_base.sh
+
+- name: Setup backups
+  hosts: test-vm
+  tasks:
+    - name: Copy psql_backup.sh
+      become: true
+      template:
+        src: psql_backup.sh.j2
+        mode: 0755
+        dest: /opt/psql_backup.sh
+
+    - name: Setup backups
+      become: true
+      command: /opt/psql_backup.sh
+
+    - name: Copy psql_reindex_vacuum.sh
+      become: true
+      template:
+        src: psql_reindex_vacuum.sh.j2
+        mode: 0755
+        dest: /opt/psql_reindex_vacuum.sh
+
+    - name: Setup reindex
+      become: true
+      command: /opt/psql_reindex_vacuum.sh
+
+    - name: Copy backup_cron.sh
+      become: true
+      template:
+        src: backup_cron.sh.j2
+        mode: 0755
+        dest: /opt/backup_cron.sh
+
+    - name: Setup bcakup cron
+      become: true
+      command: /opt/backup_cron.sh
