@@ -1,3 +1,3 @@
 #!/bin/bash
-pg_dump -U postgres test_db | gzip > /backup/test_db-$(date +%d_%m_%Y).tar.gz
-pg_dump -U postgres postgres | gzip > /backup/postgres-$(date +%d_%m_%Y).tar.gz
+pg_dump -U postgres -O -F p -C test_db | gzip -c > /backup/test_db-$(date +%d_%m_%Y).gz
+pg_dump -U postgres -O -F p -C postgres | gzip -c > /backup/postgres-$(date +%d_%m_%Y).gz
