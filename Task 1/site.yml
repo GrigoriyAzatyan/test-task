@@ -1,4 +1,7 @@
 ---
+
+# Устанавливаем PostgreSQL
+#---------------------------------------------
 - name: Install PostgreSQL 14
   hosts: test-vm
   tasks:
@@ -45,6 +48,9 @@
         name: postgresql
         state: restarted
 
+
+# Устанавливаем PGAdmin
+#---------------------------------------------
 - name: Install PGAdmin
   hosts: test-vm
   tasks:
@@ -93,6 +99,9 @@
       become: true
       command: /opt/create_base.sh
 
+
+# Настраиваем бэкапы
+#---------------------------------------------
 - name: Setup backups
   hosts: test-vm
   tasks:
@@ -128,3 +137,20 @@
     - name: Setup bcakup cron
       become: true
       command: /opt/backup_cron.sh
+
+
+# Настраиваем мониторинг базы с помощью PGDash
+#---------------------------------------------
+- name: Configure PGDash monitoring
+  hosts: test-vm
+  tasks:
+    - name: Copy pgdash_setup.sh
+      become: true
+      template:
+        src: pgdash_setup.sh.j2
+        mode: 0755
+        dest: /opt/pgdash_setup.sh
+
+    - name: Setup backups
+      become: true
+      command: /opt/pgdash_setup.sh

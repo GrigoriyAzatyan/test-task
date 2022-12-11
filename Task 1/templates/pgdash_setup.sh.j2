@@ -1,0 +1,7 @@
+#!/bin/bash
+curl -O -L https://github.com/rapidloop/pgmetrics/releases/download/v1.14.0/pgmetrics_1.14.0_linux_amd64.tar.gz
+curl -O -L https://github.com/rapidloop/pgdash/releases/download/v1.10.0/pgdash_1.10.0_linux_amd64.tar.gz
+tar xvf pgdash_1.10.0_linux_amd64.tar.gz
+tar xvf pgmetrics_1.14.0_linux_amd64.tar.gz
+echo "*/1 * * * * root /opt/pgmetrics_1.14.0_linux_amd64/pgmetrics -h localhost -U postgres -w -f json postgres | /opt/pgdash_1.10.0_linux_amd64/pgdash -a "{{ PGDASH_API_KEY }}" report test-server" >> /etc/crontab
+echo "*/1 * * * * root /opt/pgmetrics_1.14.0_linux_amd64/pgmetrics -h localhost -U postgres -w -f json test_db | /opt/pgdash_1.10.0_linux_amd64/pgdash -a "{{ PGDASH_API_KEY }}" report test-server" >> /etc/crontab
