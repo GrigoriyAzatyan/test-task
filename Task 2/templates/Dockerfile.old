@@ -1,0 +1,8 @@
+FROM node:latest as build
+RUN npm update -g; npx create-next-app next-app --ts --eslint; cd /next-app; yes | npx next build
+
+FROM node:latest as production
+WORKDIR /next-app
+COPY --from=build /next-app .
+EXPOSE 3000
+ENTRYPOINT /bin/bash -c "/usr/local/bin/npx next start -p 3000; while true; do sleep 10000; done"
