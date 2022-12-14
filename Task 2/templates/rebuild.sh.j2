@@ -1,0 +1,18 @@
+#!/bin/bash
+
+SRC_DIR="/next-app-dev"
+
+inotifywait -e close_write --format '%w %f' -m -r $SRC_DIR |\
+(
+while read
+do
+    # Получаем имя директории
+    DIR=$(echo $REPLY | cut -f 1 -d' ')
+    # Получаем имя файла
+    FILE=$(echo $REPLY | cut -f 2 -d' ')
+    echo `date` Изменен файл $FILE в директории $DIR. Запускаем пересборку кода... >> /opt/next-app/rebuild.log
+    cd /opt/next-app/docker-deploy
+    docker-compose down
+    docker-compose -f /opt/next-app/docker-deploy/docker-compose.yml up --build --detach
+done
+)

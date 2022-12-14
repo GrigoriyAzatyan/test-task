@@ -6,7 +6,7 @@ WORKDIR /temp
 COPY --from=build /next-app .
 COPY --from=build /next-app/.next .
 WORKDIR /script
-COPY fill_code.sh.j2 .
+COPY fill_code.sh .
 WORKDIR /next-app
 EXPOSE 3000
-ENTRYPOINT /bin/bash -c /script/fill_code.sh.j2
+ENTRYPOINT /bin/bash -c "/script/fill_code.sh"

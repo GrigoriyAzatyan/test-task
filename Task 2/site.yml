@@ -1,8 +1,8 @@
 ---
 
-# Устанавливаем PostgreSQL
+# Устанавливаем Docker и Docker Compose
 #---------------------------------------------
-- name: Install PostgreSQL 14
+- name: Installing Docker and Docker Compose
   hosts: test-vm
   tasks:
     - name: get lsb-release
@@ -15,142 +15,125 @@
 
     - name: Add an Apt signing key, uses whichever key is at the URL
       become: true
-      apt_key:
-        url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
-        state: present
+      command: /bin/bash -c 'curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -'
 
     - name: add repository
       become: true
       apt_repository:
-        repo: "deb http://apt.postgresql.org/pub/repos/apt {{ release.stdout }}-pgdg main"
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ release.stdout }} stable"
         state: present
 
-    - name: Update the repository cache and install PostgreSQL-14
+    - name: Install packages
       become: true
       apt:
-        name: postgresql-14
+        name: 
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io 
+          - docker-compose-plugin
+          - inotify-tools
         state: latest
         update_cache: yes
 
     - name: Enable service
       become: true
       systemd:
-        name: postgresql
+        name: docker
         enabled: true
-
-    - name: Set free local access to psql
-      become: true
-      command: sed -i s/peer/trust/ /etc/postgresql/14/main/pg_hba.conf
 
     - name: Start service
       become: true
       systemd:
-        name: postgresql
-        state: restarted
+        name: docker
+        state: started
 
+    - name: install docker-compose
+      become: true
+      get_url: 
+        url: https://github.com/docker/compose/releases/download/v2.14.0/docker-compose-linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: 0755
 
-# Устанавливаем PGAdmin
-#---------------------------------------------
-- name: Install PGAdmin
+# Копируем скрипты и конфиг-файлы
+#--------------------------------
+- name: Copy scripts and configs
   hosts: test-vm
   tasks:
-    - name: Add apt-key
+    - name: Create Folders
       become: true
-      apt_key:
-        url: https://www.pgadmin.org/static/packages_pgadmin_org.pub
-        state: present
+      command: /bin/bash -c 'mkdir -p /opt/next-app; mkdir -p /opt/next-app/scripts; mkdir -p /opt/next-app/docker-deploy'
 
-    - name: Add repository
-      become: true
-      apt_repository:
-        repo: "deb https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/{{ release.stdout }} pgadmin4 main"
-        state: present
-
-    - name: Install PGAdmin
-      become: true
-      apt:
-        name: pgadmin4
-        state: latest
-        update_cache: yes
-
-    - name: Copy pgadmin_setup.sh
+    - name: Copy Dockerfile
       become: true
       template:
-        src: pgadmin_setup.sh.j2
-        mode: 0755
-        dest: /opt/pgadmin_setup.sh
+        src: Dockerfile.j2
+        mode: 0644
+        dest: /opt/next-app/docker-deploy/Dockerfile
 
-    - name: Setup PGAdmin Web mode
+    - name: Copy docker-compose.yml
       become: true
-      command: /opt/pgadmin_setup.sh
+      template:
+        src: docker-compose.yml.j2
+        mode: 0644
+        dest: /opt/next-app/docker-deploy/docker-compose.yml
+
+    - name: Copy fill_code.sh
+      become: true
+      template:
+        src: fill_code.sh.j2
+        mode: 0755
+        dest: /opt/next-app/docker-deploy/fill_code.sh
+
+    - name: Copy dev-loop.sh.j2
+      become: true
+      template:
+        src: dev-loop.sh.j2
+        mode: 0755
+        dest: /opt/next-app/scripts/dev-loop.sh
+
+    - name: Copy rebuild.sh.j2
+      become: true
+      template:
+        src: rebuild.sh.j2
+        mode: 0755
+        dest: /opt/next-app/scripts/rebuild.sh
 
 
-- name: Create Database and filling data
+# Запускаем сервисы
+#-------------------------------------------------------------
+- name: Start services
   hosts: test-vm
   tasks:
-    - name: Copy script
+    - name: Create dev-loop storage
       become: true
-      template:
-        src: create_base.sh.j2
-        mode: 0755
-        dest: /opt/create_base.sh
+      command: /bin/bash -c '/opt/next-app/scripts/dev-loop.sh'
 
-    - name: Start script
+    - name: Docker Compose UP!
       become: true
-      command: /opt/create_base.sh
+      shell: docker-compose up --build --detach
+      args:
+         chdir: /opt/next-app/docker-deploy
 
+    - name: Pause 2 min.
+      ansible.builtin.pause:
+        minutes: 2
+        prompt: "Let's wait until containers are starting..."
 
-# Настраиваем бэкапы
-#---------------------------------------------
-- name: Setup backups
-  hosts: test-vm
-  tasks:
-    - name: Copy psql_backup.sh
+    - name: Start rebuild waiting now
       become: true
-      template:
-        src: psql_backup.sh.j2
-        mode: 0755
-        dest: /opt/psql_backup.sh
-
-    - name: Setup backups
-      become: true
-      command: /opt/psql_backup.sh
-
-    - name: Copy psql_reindex_vacuum.sh
-      become: true
-      template:
-        src: psql_reindex_vacuum.sh.j2
-        mode: 0755
-        dest: /opt/psql_reindex_vacuum.sh
-
-    - name: Setup reindex
-      become: true
-      command: /opt/psql_reindex_vacuum.sh
-
-    - name: Copy backup_cron.sh
-      become: true
-      template:
-        src: backup_cron.sh.j2
-        mode: 0755
-        dest: /opt/backup_cron.sh
-
-    - name: Setup bcakup cron
-      become: true
-      command: /opt/backup_cron.sh
+      command: /bin/bash -c '/opt/next-app/scripts/rebuild.sh > /dev/null 2>&1 &'
+      async: 10
+      poll: 0
 
 
-# Настраиваем мониторинг базы с помощью PGDash
-#---------------------------------------------
-- name: Configure PGDash monitoring
-  hosts: test-vm
-  tasks:
-    - name: Copy pgdash_setup.sh
-      become: true
-      template:
-        src: pgdash_setup.sh.j2
-        mode: 0755
-        dest: /opt/pgdash_setup.sh
 
-    - name: Setup backups
-      become: true
-      command: /opt/pgdash_setup.sh
+
+
+
+
+
+

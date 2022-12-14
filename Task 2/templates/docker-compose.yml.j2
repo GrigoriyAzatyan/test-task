@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+    next-app-dev:
+       container_name: next-app-dev
+       build: .
+       image: next-app:latest
+       tty: yes
+       ports:
+         - "2999:3000"
+       restart: unless-stopped
+       volumes:
+          - /next-app-dev:/next-app
+    next-app:
+       container_name: next-app
+       image: next-app:latest
+       tty: yes
+       ports:
+        - "3000:3000"
+       restart: unless-stopped
+       volumes:
+          - /next-app:/next-app

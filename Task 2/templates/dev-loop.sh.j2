@@ -1,19 +1,19 @@
 #!/bin/bash
 
 mount=`df -h | grep /dev/loop100 | cut -d' ' -f1`
-
 if [ "$mount" == "/dev/loop100" ]
 then
    echo "Монтирование уже выполнено"
 else
-   echo "Монтирование НЕ выполнено"
-
    mkdir -p /next-app
+   mkdir -p /next-app-dev
    touch /loop_nextapp
    truncate -s 512M /loop_nextapp
    losetup /dev/loop100 /loop_nextapp
    mkfs.ext4 /dev/loop100
    mount /dev/loop100 /next-app
+   rm -rf /next-app/lost+found
    echo "@reboot root losetup /dev/loop100 /loop_nextapp" >> /etc/crontab
    echo "@reboot root mount /dev/loop100 /next-app" >> /etc/crontab
+   echo "@reboot root /bin/bash -c '/opt/next-app/scripts/rebuild.sh > /dev/null 2>&1 &'" >> /etc/crontab
 fi
