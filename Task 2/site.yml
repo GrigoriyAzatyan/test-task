@@ -128,12 +128,3 @@
       command: /bin/bash -c '/opt/next-app/scripts/rebuild.sh > /dev/null 2>&1 &'
       async: 10
       poll: 0
-
-
-
-
-
-
-
-
-
