@@ -7,6 +7,7 @@ then
 else
    mkdir -p /next-app
    mkdir -p /next-app-dev
+   touch /next-app-dev/rebuild
    touch /loop_nextapp
    truncate -s 512M /loop_nextapp
    losetup /dev/loop100 /loop_nextapp
