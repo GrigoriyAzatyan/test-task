@@ -22,7 +22,7 @@
 
 
 #### 1.1. dev-loop
-[Вот этот скрипт](https://github.com/GrigoriyAzatyan/test-task/blob/master/Task%202/templates/dev-loop.sh.j2) проверяет наличие в фаловой системе смонтированного устройства /dev/loop100.
+[Вот этот скрипт](https://github.com/GrigoriyAzatyan/test-task/blob/master/Task%202/templates/dev-loop.sh.j2) проверяет наличие в файловой системе смонтированного устройства /dev/loop100.
 - Если таковое имеется, скрипт завершает работу;
 - Если нет - считаем это первоначальным запуском:
      - Создаем файл /loop_nextapp;
