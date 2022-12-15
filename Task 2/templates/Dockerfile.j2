@@ -1,5 +1,5 @@
 FROM node:latest as build
-RUN npm update -g; npx create-next-app next-app --ts --eslint; cd /next-app; yes | npx next build
+RUN npm update -g; npx create-next-app next-app --ts --eslint; cd /next-app; touch rebuild; yes | npx next build
 
 FROM node:latest as production
 WORKDIR /temp

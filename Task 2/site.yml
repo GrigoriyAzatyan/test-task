@@ -118,11 +118,6 @@
       args:
          chdir: /opt/next-app/docker-deploy
 
-    - name: Pause 2 min.
-      ansible.builtin.pause:
-        minutes: 2
-        prompt: "Let's wait until containers are starting..."
-
     - name: Start rebuild waiting now
       become: true
       command: /bin/bash -c '/opt/next-app/scripts/rebuild.sh > /dev/null 2>&1 &'
