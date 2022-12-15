@@ -24,3 +24,8 @@
 ### Примечания
 - Пароли не шифровал и выложил открыто в README с целью упрощения доступа к тесовым ресурсам.
 - Playbook рассчитан на запуск в среде Debian/Ubuntu. 
+
+
+### Как запустить Playbook у себя: 
+
+`ansible-playbook -i inventory/prod.yml site.yml`
